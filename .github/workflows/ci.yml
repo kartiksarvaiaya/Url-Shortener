@@ -22,7 +22,7 @@ jobs:
         env:
           POSTGRES_DB: url_shortener_db
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: Kartik@123
 
         ports:
           - 5432:5432
