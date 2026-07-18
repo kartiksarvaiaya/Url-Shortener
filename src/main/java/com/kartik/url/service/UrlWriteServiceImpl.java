@@ -15,10 +15,12 @@ import com.kartik.url.util.UrlValidator;
 @Service
 public class UrlWriteServiceImpl implements UrlWriteService{
 	private final UrlRepository urlRepository;
+	private final UrlCacheService cacheService;
 	@Value("${app.base-url}")
 	private String baseUrl;
-    public UrlWriteServiceImpl(UrlRepository urlRepository) {
+    public UrlWriteServiceImpl(UrlRepository urlRepository, UrlCacheService cacheService) {
         this.urlRepository = urlRepository;
+        this.cacheService = cacheService;
     }
     @Override
     @Transactional
@@ -33,6 +35,10 @@ public class UrlWriteServiceImpl implements UrlWriteService{
     	String shortCode = Base62Encoder.encode(url.getId());
     	url.setShortCode(shortCode);
     	url = urlRepository.save(url);
+    	cacheService.put(
+    	        url.getShortCode(),
+    	        url.getOriginalUrl()
+    	);
     	ShortUrlResponse response = new ShortUrlResponse();
         response.setOriginalUrl(url.getOriginalUrl());
         response.setShortUrl(baseUrl + "/" + url.getShortCode());
