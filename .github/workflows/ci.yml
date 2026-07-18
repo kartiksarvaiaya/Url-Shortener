@@ -1,0 +1,46 @@
+name: URL Shortener CI
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Verify Maven
+        run: mvn --version
+
+      - name: Compile Project
+        run: mvn clean compile
+
+      - name: Run Unit Tests
+        run: mvn test
+
+      - name: Package Application
+        run: mvn package -DskipTests
+
+      - name: Upload JAR Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: url-shortener-jar
+          path: target/*.jar
