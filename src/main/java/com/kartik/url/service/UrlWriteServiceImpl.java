@@ -26,28 +26,57 @@ public class UrlWriteServiceImpl implements UrlWriteService{
     @Override
     @Transactional
     public ShortUrlResponse createShortUrl(CreateShortUrlRequest request) {
-    	if(!UrlValidator.isValid(request.getOriginalUrl()))
-    	{
-    		throw new InvalidUrlException("Invalid Url");
-    	}
-    	Url url = new Url();
-    	url.setOriginalUrl(request.getOriginalUrl());
-    	url = urlRepository.save(url);
-    	String shortCode = Base62Encoder.encode(url.getId());
-    	url.setShortCode(shortCode);
-    	url = urlRepository.save(url);
-    	try {
-    	cacheService.put(
-    	        url.getShortCode(),
-    	        url.getOriginalUrl()
-    	);
-    	}
-    	catch(Exception e) {
-    		throw new CacheException("Redis unavailable. Continuing without cache.");
-    	}
-    	ShortUrlResponse response = new ShortUrlResponse();
+
+        if (!UrlValidator.isValid(request.getOriginalUrl())) {
+            throw new InvalidUrlException("Invalid Url");
+        }
+
+        // Check if URL already exists
+        Url existingUrl = urlRepository
+                .findByOriginalUrl(request.getOriginalUrl())
+                .orElse(null);
+
+        if (existingUrl != null) {
+
+            try {
+                cacheService.put(
+                        existingUrl.getShortCode(),
+                        existingUrl.getOriginalUrl());
+            } catch (Exception e) {
+                // Ignore cache failure
+            }
+
+            ShortUrlResponse response = new ShortUrlResponse();
+            response.setOriginalUrl(existingUrl.getOriginalUrl());
+            response.setShortUrl(baseUrl + "/" + existingUrl.getShortCode());
+
+            return response;
+        }
+
+        // Create new record
+        Url url = new Url();
+        url.setOriginalUrl(request.getOriginalUrl());
+
+        url = urlRepository.save(url);
+
+        String shortCode = Base62Encoder.encode(url.getId());
+
+        url.setShortCode(shortCode);
+
+        url = urlRepository.save(url);
+
+        try {
+            cacheService.put(
+                    url.getShortCode(),
+                    url.getOriginalUrl());
+        } catch (Exception e) {
+            // Ignore cache failure
+        }
+
+        ShortUrlResponse response = new ShortUrlResponse();
         response.setOriginalUrl(url.getOriginalUrl());
         response.setShortUrl(baseUrl + "/" + url.getShortCode());
+
         return response;
     }
 }
