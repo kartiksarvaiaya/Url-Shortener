@@ -32,19 +32,23 @@ public class Url {
 
     @Column(name = "click_count", nullable = false)
     private Long clickCount;
+    
+    @Column(name = "last_accessed_at")
+    private LocalDateTime lastAccessedAt;
 
     public Url() {
     }
 
     public Url(Long id, String originalUrl, String shortCode,
                LocalDateTime createdAt, LocalDateTime expiresAt,
-               Long clickCount) {
+               Long clickCount, LocalDateTime lastAccessedAt) {
         this.id = id;
         this.originalUrl = originalUrl;
         this.shortCode = shortCode;
         this.createdAt = createdAt;
         this.expiresAt = expiresAt;
         this.clickCount = clickCount;
+        this.lastAccessedAt = lastAccessedAt;
     }
 
     @PrePersist
@@ -82,6 +86,14 @@ public class Url {
         this.shortCode = shortCode;
     }
 
+    public LocalDateTime getLastAccessedAt() {
+        return lastAccessedAt;
+    }
+
+    public void setLastAccessedAt(LocalDateTime lastAccessedAt) {
+        this.lastAccessedAt = lastAccessedAt;
+    }
+    
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
