@@ -1,5 +1,6 @@
 package com.kartik.url.service;
 
+import org.hibernate.cache.CacheException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,10 +36,15 @@ public class UrlWriteServiceImpl implements UrlWriteService{
     	String shortCode = Base62Encoder.encode(url.getId());
     	url.setShortCode(shortCode);
     	url = urlRepository.save(url);
+    	try {
     	cacheService.put(
     	        url.getShortCode(),
     	        url.getOriginalUrl()
     	);
+    	}
+    	catch(Exception e) {
+    		throw new CacheException("Redis unavailable. Continuing without cache.");
+    	}
     	ShortUrlResponse response = new ShortUrlResponse();
         response.setOriginalUrl(url.getOriginalUrl());
         response.setShortUrl(baseUrl + "/" + url.getShortCode());
